@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>TSW WebWeatherManager</title>
+        <meta name="author" content="Foobian">
+        <meta name="viewport" content="width=device-width">
+        <meta name="og:title" content="WebWeatherManager">
+        <meta name="og:description" content="Interface with the TSW HTTP API to control the weather in your game session live from your browser.">
+        <link rel="stylesheet" href="style.css"> 
+    </head>
+    
+    <body>
+        <div style="margin: 1.5em; display: flex; align-items: center; flex-wrap: wrap; row-gap: 1em;">
+            <div style="flex-shrink: 0; flex-grow: 10; margin-right: 20px;">
+                <h1 style="margin-bottom: 0px; margin-top: 0px;">WebWeatherManager</h1>
+                <i id="subheading">for Train Sim World 5+</i>
+            </div>
+            <div class="header-field-container">
+                <input class="header-field" id="uri-field" title="URI" placeholder="http://localhost:31270/" value="http://localhost:31270/" onchange="onURIChanged(this)"
+                    pattern="^http:\/\/.+\/$" type="text" required>
+                <input class="header-field" id="api-key-field" title="CommAPIKey" placeholder="CommAPIKey" onchange="onCommAPIKeyChanged(this)"
+                    minlength="44" maxlength="44" type="text" required>
+            </div>
+        </div>
+        
+        <div class="body-content">
+            <div class="weather-slider-table">
+                <p class="weather-slider-label">Temperature</p>
+                <input class="weather-slider"
+                id="Temperature" type="range" min="-40" max="40" step="any" 
+                onchange="temperatureChanged(this.value)" list="temperatureMarkers"/>
+                <datalist id="temperatureMarkers">
+                    <option value="0"></option>
+                </datalist>
+                
+                <p class="weather-slider-label">Cloudiness</p>
+                <input class="weather-slider"
+                id="Cloudiness" type="range" min="0" max="1" step="any" 
+                onchange="cloudinessChanged(this.value)"/>
+                
+                <p class="weather-slider-label">Precipitation</p>
+                <input class="weather-slider"
+                id="Precipitation" type="range" min="0" max="1" step="any" 
+                onchange="precipitationChanged(this.value)"/>
+                
+                <p class="weather-slider-label">Wetness</p>
+                <input class="weather-slider"
+                id="Wetness" type="range" min="0" max="1" step="any" 
+                onchange="wetnessChanged(this.value)"/>
+                
+                <p class="weather-slider-label">Ground Snow</p>
+                <input class="weather-slider"
+                id="GroundSnow" type="range" min="0" max="1" step="any" 
+                onchange="groundSnowChanged(this.value)"/>
+                
+                <p class="weather-slider-label">Piled Snow</p>
+                <input class="weather-slider"
+                id="PiledSnow" type="range" min="0" max="1" step="any" 
+                onchange="piledSnowChanged(this.value)"/>
+                
+                <p class="weather-slider-label">Fog Density</p>
+                <input class="weather-slider"
+                id="FogDensity" type="range" min="0" max="1" step="any" 
+                onchange="fogDensityChanged(this.value)"/>
+
+                <button style="height: 2rem; flex-basis: 100%; margin-top: 1em;" onclick="reset()">Reset to original weather</button>
+            </div>
+        </div>
+    </body>
+        
+    <script>
+        function temperatureChanged(value) {
+            patchToGame("WeatherManager.Temperature?Value=" + value);
+        }
+            
+        function cloudinessChanged(value) {
+            patchToGame("WeatherManager.Cloudiness?Value=" + value);
+        }
+
+        function precipitationChanged(value) {
+            patchToGame("WeatherManager.Precipitation?Value=" + value);
+        }
+
+        function wetnessChanged(value) {
+            patchToGame("WeatherManager.Wetness?Value=" + value);
+        }
+
+        function groundSnowChanged(value) {
+            patchToGame("WeatherManager.GroundSnow?Value=" + value);
+        }
+
+        function piledSnowChanged(value) {
+            patchToGame("WeatherManager.PiledSnow?Value=" + value);
+        }
+
+        function fogDensityChanged(value) {
+            patchToGame("WeatherManager.FogDensity?Value=" + value);
+        }
+
+        function reset() {
+            patchToGame("WeatherManager.Reset?Value=1");
+        }
+
+        function patchToGame(uriPath) {
+            const xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("PATCH", document.getElementById("uri-field").value + "SET/" + uriPath, true);
+            xmlHttp.setRequestHeader("DTGCommKey", document.getElementById("api-key-field").value);
+            xmlHttp.send("");
+        }
+
+        function getFromGame(uriPath, callback) {
+            const xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("GET", document.getElementById("uri-field").value + uriPath, true);
+            xmlHttp.setRequestHeader("DTGCommKey", document.getElementById("api-key-field").value);
+        
+            xmlHttp.onreadystatechange = () => {
+                if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+                    callback(uriPath, xmlHttp.responseText);
+                }
+            };
+        
+            xmlHttp.send("");
+        }
+
+        function subscribeToPath(uriPath, id, callback) {
+            const xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("POST", document.getElementById("uri-field").value + "SUBSCRIPTION/" + uriPath + "?Subscription=" + id, true);
+            xmlHttp.setRequestHeader("DTGCommKey", document.getElementById("api-key-field").value);
+            
+            xmlHttp.onreadystatechange = () => {
+                if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+                    callback(uriPath, xmlHttp.responseText);
+                }
+            };
+        
+            xmlHttp.send("");
+        }
+
+        let gameInstanceID = "";
+        let subscriptionID = -1;
+
+        function onCommAPIKeyChanged(field) {
+            getFromGame("INFO", getCallback);
+        }
+
+        function onURIChanged(field) {
+            getFromGame("INFO", getCallback);
+        }
+
+        if (document.getElementById("api-key-field").checkValidity()) {
+            getFromGame("INFO", getCallback);
+        }
+
+        setInterval(getSliderValues, 250);
+
+        function getSliderValues() {
+            if (document.getElementById("api-key-field").checkValidity()) {
+                if (subscriptionID == -1) {
+                    getFromGame("GET/WeatherManager.Temperature", getCallback);
+                    getFromGame("GET/WeatherManager.Cloudiness", getCallback);
+                    getFromGame("GET/WeatherManager.Precipitation", getCallback);
+                    getFromGame("GET/WeatherManager.Wetness", getCallback);
+                    getFromGame("GET/WeatherManager.GroundSnow", getCallback);
+                    getFromGame("GET/WeatherManager.PiledSnow", getCallback);
+                    getFromGame("GET/WeatherManager.FogDensity", getCallback);
+                }
+                else {
+                    getFromGame("SUBSCRIPTION?Subscription=" + subscriptionID, getCallback);
+                }
+            }
+        }
+
+        function subscriptionCallback(route, response) {
+            const json = JSON.parse(response);
+            if (!json.CurrentlyValid) {
+                alert("An error occured subscribing to the following path:\n" + route);
+                console.error(response);
+            }
+            else
+            {
+                console.log(response);
+            }
+        }
+
+        function getCallback(route, response) {
+            const json = JSON.parse(response);
+            
+            switch (route.toUpperCase()) {
+                case "INFO":
+                    document.getElementById("subheading").innerHTML = "for " + json.Meta.GameName;
+        
+                    const newgameInstanceID = json.Meta.GameInstanceID;
+                    if(gameInstanceID != newgameInstanceID) {
+                        console.log("Game instance changed!");
+                        subscriptionID = -1;
+                        try {
+                            getFromGame("listsubscriptions", getCallback);
+                        } catch (error) {
+                            console.error(error);
+                        }
+                    }
+        
+                    getSliderValues();
+                    
+                    break;
+                case "listsubscriptions":
+                    const existingSubscriptions = json.Subscriptions;
+                    if (existingSubscriptions.length == 0) {
+                        subscriptionID = 0;
+                    } 
+                    else {
+                        let usedIDs = [];
+                        existingSubscriptions.forEach(sub => {
+                            usedIDs.add(sub.SubscriptionID);
+                        });
+                        usedIDs.sort((a, b) => { return a-b; });
+
+                        var offset = usedIDs[0];
+                        var lowest = -1;
+                        for (i = 0;  i < usedIDs.length;  ++i) {
+                        if (usedIDs[i] != offset) {
+                            lowest = offset;
+                            break;
+                        }
+                        offset++;
+                        }
+                        if (lowest == -1) {
+                            lowest = usedIDs[usedIDs.length - 1] + 1;
+                        }
+                        subscriptionID = lowest;
+                    }
+
+                    subscribeToPath("WeatherManager.Temperature", subscriptionID, subscriptionCallback);
+                    subscribeToPath("WeatherManager.Cloudiness", subscriptionID, subscriptionCallback);
+                    subscribeToPath("WeatherManager.Precipitation", subscriptionID, subscriptionCallback);
+                    subscribeToPath("WeatherManager.Wetness", subscriptionID, subscriptionCallback);
+                    subscribeToPath("WeatherManager.GroundSnow", subscriptionID, subscriptionCallback);
+                    subscribeToPath("WeatherManager.PiledSnow", subscriptionID, subscriptionCallback);
+                    subscribeToPath("WeatherManager.FogDensity", subscriptionID, subscriptionCallback);
+
+                    break;
+                default:
+                    if (route.startsWith("GET")) {
+                        if (json.result = "Success") {
+                            const parameter = Object.keys(json.Values)[0];
+                            const value = json.Values[parameter];
+                            document.getElementById(parameter).value = value;
+                        }
+                        else { console.log(json); }
+                    }
+
+                    break;
+            }
+        }
+    </script>
+</html>

@@ -1,0 +1,131 @@
+:root {
+    color-scheme: light dark;
+
+    --color-db-cool-grey-800:#131821;
+    --color-db-cool-grey-800-rgb:19 24 33;
+    --color-db-cool-grey-700:#282d37;
+    --color-db-cool-grey-700-rgb:40 45 55;
+    --color-db-cool-grey-600:#3c414b;
+    --color-db-cool-grey-500:#646973;
+    --color-db-cool-grey-400:#878c96;
+    --color-db-cool-grey-300:#afb4bb;
+    --color-db-cool-grey-200:#d7dce1;
+    --color-db-cool-grey-200-rgb:215 220 225;
+    --color-db-cool-grey-100:#f0f3f5;
+    --color-db-red-700:#9b000e;
+    --color-db-red-600:#c50014;
+    --color-db-red-500:#ec0016;
+    --color-db-red-500-rgb:236 0 22;
+    --color-db-red-400:#f75056;
+    --color-db-red-400-rgb:247 80 86;
+    --color-db-red-300:#fa9090;
+    --color-db-red-200:#fcc8c3;
+    --color-db-red-100:#fee6e6;
+    --color-db-red-100-rgb:254 230 230;
+    --color-db-green-700:#165c27;
+    --color-db-green-600:#2a7230;
+    --color-db-green-500:#408335;
+    --color-db-green-500-rgb:64 131 53;
+    --color-db-green-400:#66a558;
+    --color-db-green-400-rgb:102 165 88;
+    --color-db-green-300:#8cbc80;
+    --color-db-green-200:#bddbb9;
+    --color-db-green-200-rgb:189 219 185;
+    --color-db-green-100:#e2f3e5;
+    --color-db-light-green-700:#44741a;
+    --color-db-light-green-100:#ebf7dd;
+    --color-db-yellow-600:#fb0;
+    --color-db-yellow-500:#ffd800;
+    --color-db-yellow-500-dark:#e6c200;
+    --color-db-yellow-500-rgb:255 216 0;
+    --color-db-yellow-100:#ffffdc;
+    --color-db-blue-700:#0a1e6e;
+    --color-db-blue-600:#0c3992;
+    --color-db-blue-400:#347de0;
+    --color-db-cyan-500:#309fd1;
+
+    --body-color:var(--color-db-cool-grey-100);
+    --body-offset-bg:#eff0f1;
+
+    --elevation-bg:var(--color-db-cool-grey-800-rgb);
+    --elevation-00dp-bg:rgb(var(--elevation-bg)/0);
+    --elevation-01dp-bg:rgb(var(--elevation-bg)/.007);
+    --elevation-02dp-bg:rgb(var(--elevation-bg)/.013);
+    --elevation-03dp-bg:rgb(var(--elevation-bg)/.02);
+    --elevation-04dp-bg:rgb(var(--elevation-bg)/.027);
+    --elevation-06dp-bg:rgb(var(--elevation-bg)/.04);
+    --elevation-08dp-bg:rgb(var(--elevation-bg)/.053);
+    --elevation-12dp-bg:rgb(var(--elevation-bg)/.08);
+    --elevation-16dp-bg:rgb(var(--elevation-bg)/.107);
+    --elevation-24dp-bg:rgb(var(--elevation-bg)/.16);
+    --elevation-32dp-bg:rgb(var(--elevation-bg)/.213);
+    --elevation-40dp-bg:rgb(var(--elevation-bg)/.267);
+
+    --elevation-shadow:175 180 187;
+    
+    @media(prefers-color-scheme:dark) {
+        --body-color:var(--color-db-cool-grey-700);
+        --body-offset-bg:#1f242c;
+        --elevation-bg:255 255 255;
+        --elevation-shadow:0 0 0;
+    }
+}
+
+body {
+    font-family: sans-serif;
+    padding: 0;
+    margin: 0;
+    background-color: var(--body-color);
+}
+
+.body-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--body-offset-bg);
+}
+
+.weather-slider-table {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 1em;
+    max-width: 55em;
+}
+
+.weather-slider-label {
+    flex-grow: 0.5;
+    flex-shrink: 0;
+    flex-basis: 20%;
+    min-width: 20ch;
+}
+
+.weather-slider {
+    flex-grow: 1;
+    flex-shrink: 0;
+    flex-basis: 60%;
+}
+
+.header-field-container {
+    flex-grow: 1;
+    margin-top: 5px;
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 5px;
+    row-gap: 3px;
+}
+
+.header-field {
+    max-height: 1rem;
+    min-width: 45ch;
+    flex-shrink: .5;
+    flex-grow: 1;
+    
+    font-family: Monospace;
+    padding: 10px;
+    border: 1px solid var(--elevation-16dp-bg);
+    border-radius: 4px;
+}
+
+.header-field:invalid {
+    border: 2px solid var(--color-db-red-600);
+}
